@@ -1,0 +1,44 @@
+{
+  "name": "virtual-camera-display",
+  "version": "1.0.0",
+  "description": "Borderless Electron Application for Displaying Virtual Camera",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron index.js",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never"
+  },
+  "keywords": [
+    "electron",
+    "obs",
+    "virtual-camera",
+    "camera"
+  ],
+  "author": "PlumeInk",
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.plumeink.virtual-camera-display",
+    "productName": "VCD",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.js",
+      "index.html",
+      "package.json",
+      "preload.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
