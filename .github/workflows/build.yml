@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'ver.[0-9]+.[0-9]+.[0-9]+'
+      - 'Ver.[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
       id: get_version
       run: |
         # 使用PowerShell语法从您手动创建的tag中提取版本号
-        $VERSION = $env:GITHUB_REF -replace 'refs/tags/ver.',''
+        $VERSION = $env:GITHUB_REF -replace 'refs/tags/Ver.',''
         $RELEASE_TAG = $env:GITHUB_REF -replace 'refs/tags/',''
         echo "VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
         echo "RELEASE_TAG=$RELEASE_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -65,56 +65,57 @@ jobs:
     - name: Cleanup Old Workflow Runs
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+      shell: pwsh
       run: |
-        # 获取当前工作流的名称
-        WORKFLOW_NAME="${{ github.workflow }}"
-        echo "清理工作流名称: $WORKFLOW_NAME"
+        # 使用PowerShell语法清理旧工作流运行记录
+        $WORKFLOW_NAME = "${{ github.workflow }}"
+        Write-Host "清理工作流名称: $WORKFLOW_NAME"
         
-        # 获取所有已完成的工作流运行，按创建时间倒序排列
-        page=1
-        all_runs=()
+        # 创建数组存储所有运行记录
+        $all_runs = @()
+        $page = 1
+        $repo = "${{ github.repository }}"
         
         # 收集所有当前工作流的运行记录
-        while true; do
+        while ($true) {
           # 获取当前页的工作流运行记录
-          runs=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=completed&per_page=100&page=$page&sort=created&direction=desc")
+          $uri = "https://api.github.com/repos/$repo/actions/runs?status=completed&per_page=100&page=$page&sort=created&direction=desc"
+          $runs = Invoke-RestMethod -Uri $uri -Headers @{"Authorization" = "token $env:GITHUB_TOKEN"}
         
           # 如果没有更多记录，退出循环
-          if [ $(echo "$runs" | jq -r '.workflow_runs | length') -eq 0 ]; then
+          if (!$runs.workflow_runs -or $runs.workflow_runs.Length -eq 0) {
             break
-          fi
+          }
         
           # 收集当前工作流的记录ID
-          current_runs=$(echo "$runs" | \
-            jq -r --arg name "$WORKFLOW_NAME" '.workflow_runs[] | select(.name == $name) | .id')
+          $current_runs = $runs.workflow_runs | Where-Object { $_.name -eq $WORKFLOW_NAME } | Select-Object -ExpandProperty id
         
           # 如果有记录，添加到数组中
-          if [ -n "$current_runs" ]; then
-            all_runs+=($current_runs)
-          fi
+          if ($current_runs) {
+            $all_runs += $current_runs
+          }
         
-          page=$((page + 1))
-        done
+          $page++
+        }
         
         # 打印收集到的记录数
-        echo "收集到的工作流运行记录总数: ${#all_runs[@]}"
+        Write-Host "收集到的工作流运行记录总数: $($all_runs.Length)"
         
         # 删除除最新5条以外的记录
-        if [ ${#all_runs[@]} -gt 5 ]; then
+        if ($all_runs.Length -gt 5) {
           # 获取要删除的记录（跳过前5个最新记录）
-          runs_to_delete=${all_runs[@]:5}
-          echo "要删除的记录数: ${#runs_to_delete[@]}"
+          $runs_to_delete = $all_runs[5..($all_runs.Length-1)]
+          Write-Host "要删除的记录数: $($runs_to_delete.Length)"
         
           # 逐个删除记录，添加延迟避免API限制
-          for run_id in $runs_to_delete; do
-            echo "删除记录ID: $run_id"
-            curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id"
-            sleep 1 # 添加1秒延迟避免触发GitHub API速率限制
-          done
-        else
-          echo "记录数不足5条，无需删除"
-        fi
+          foreach ($run_id in $runs_to_delete) {
+            Write-Host "删除记录ID: $run_id"
+            $delete_uri = "https://api.github.com/repos/$repo/actions/runs/$run_id"
+            Invoke-RestMethod -Uri $delete_uri -Headers @{"Authorization" = "token $env:GITHUB_TOKEN"} -Method Delete
+            Start-Sleep -Seconds 1 # 添加1秒延迟避免触发GitHub API速率限制
+          }
+        } else {
+          Write-Host "记录数不足5条，无需删除"
+        }
         
-        echo "清理完成！"
+        Write-Host "清理完成！"

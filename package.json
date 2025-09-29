@@ -1,6 +1,6 @@
 {
   "name": "virtual-camera-display",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Borderless Electron Application for Displaying Virtual Camera",
   "main": "index.js",
   "scripts": {
