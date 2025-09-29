@@ -35,10 +35,11 @@ jobs:
     - name: Get version from existing tag
       id: get_version
       run: |
-        # 从您手动创建的tag中提取版本号，移除前缀'ver.'
-        VERSION=${GITHUB_REF#refs/tags/ver.}
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        # 使用PowerShell语法从您手动创建的tag中提取版本号
+        $VERSION = $env:GITHUB_REF -replace 'refs/tags/ver.',''
+        $RELEASE_TAG = $env:GITHUB_REF -replace 'refs/tags/',''
+        echo "VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        echo "RELEASE_TAG=$RELEASE_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
     - name: Create Release
       id: create_release
