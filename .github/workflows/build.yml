@@ -2,9 +2,8 @@ name: Build and Release
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    tags:
+      - 'ver.[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -33,12 +32,13 @@ jobs:
     - name: Build portable version
       run: npm run dist-portable
 
-    - name: Generate tag
-      id: generate_tag
+    - name: Extract version from tag
+      id: extract_version
       run: |
-        VERSION=$(node -p "require('./package.json').version")
+        # 从触发的tag中提取版本号，移除前缀'ver.'
+        VERSION=${GITHUB_REF#refs/tags/ver.}
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
@@ -46,8 +46,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       with:
-        tag_name: ${{ steps.generate_tag.outputs.tag }}
-        release_name: Release ${{ steps.generate_tag.outputs.tag }}
+        tag_name: ${{ env.RELEASE_TAG }}
+        release_name: Release ${{ env.RELEASE_TAG }}
         draft: false
         prerelease: false
 
