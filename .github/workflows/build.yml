@@ -32,10 +32,10 @@ jobs:
     - name: Build portable version
       run: npm run dist-portable
 
-    - name: Extract version from tag
-      id: extract_version
+    - name: Get version from existing tag
+      id: get_version
       run: |
-        # 从触发的tag中提取版本号，移除前缀'ver.'
+        # 从您手动创建的tag中提取版本号，移除前缀'ver.'
         VERSION=${GITHUB_REF#refs/tags/ver.}
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
