@@ -11,7 +11,6 @@
   },
   "keywords": [
     "electron",
-
     "virtual-camera",
     "camera"
   ],
@@ -23,7 +22,7 @@
   },
   "build": {
     "appId": "com.plumeink.virtual-camera-assistant",
-    "productName": "VCD",
+    "productName": "VCA",
     "directories": {
       "output": "dist"
     },
