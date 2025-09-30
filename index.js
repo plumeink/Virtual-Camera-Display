@@ -21,7 +21,7 @@ function createWindow() {
     const isChinese = userLocale.startsWith('zh');
     
     // 从语言JSON文件中读取标题文本
-    let defaultTitle = 'Virtual Camera Display'; // 默认英文标题
+    let defaultTitle = 'Virtual Camera Assistant'; // 默认英文标题
     try {
         const langFilePath = path.join(__dirname, 'lang', isChinese ? 'zh.json' : 'en.json');
         const langData = require(langFilePath);

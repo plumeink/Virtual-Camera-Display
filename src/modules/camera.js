@@ -216,29 +216,29 @@ const CameraModule = {
             this.populateDeviceSelector(cameras);
             
             // 定义更多虚拟摄像头可能的标签关键词
-            const obsKeywords = ['obs', 'virtual', 'virtual camera', 'obs-camera'];
+            const virtualCameraKeywords = ['virtual', 'virtual camera'];
             
             // 尝试连接虚拟摄像头
-            let obsCamera = null;
+            let virtualCamera = null;
             for (const camera of cameras) {
                 if (camera.label) {
                     const lowerLabel = camera.label.toLowerCase();
-                    if (obsKeywords.some(keyword => lowerLabel.includes(keyword))) {
-                        obsCamera = camera;
+                    if (virtualCameraKeywords.some(keyword => lowerLabel.includes(keyword))) {
+                        virtualCamera = camera;
                         break;
                     }
                 }
             }
             
-            if (obsCamera) {
-                window.appModules.status.updateStatus(window.getTextSync('statusObsFound') + obsCamera.label);
-                console.log('尝试连接虚拟摄像头:', obsCamera.label);
-                const success = await this.startVideoStream(obsCamera.deviceId);
+            if (virtualCamera) {
+                window.appModules.status.updateStatus(window.getTextSync('statusVirtualCameraFound') + virtualCamera.label);
+                console.log('尝试连接虚拟摄像头:', virtualCamera.label);
+                const success = await this.startVideoStream(virtualCamera.deviceId);
                 if (!success) {
                     // 如果虚拟摄像头连接失败，尝试所有可用摄像头
-                    window.appModules.status.updateStatus(window.getTextSync('statusObsFailed'));
+                    window.appModules.status.updateStatus(window.getTextSync('statusVirtualCameraFailed'));
                     for (const camera of cameras) {
-                        if (camera.deviceId !== obsCamera.deviceId) {
+                        if (camera.deviceId !== virtualCamera.deviceId) {
                             console.log('尝试连接备用摄像头:', camera.label);
                             if (await this.startVideoStream(camera.deviceId)) {
                                 return;
@@ -248,7 +248,7 @@ const CameraModule = {
                     window.appModules.status.updateStatus(window.getTextSync('statusAllFailed'), true);
                 }
             } else {
-                // 如果没有找到OBS虚拟摄像头，尝试所有摄像头
+                // 如果没有找到虚拟摄像头，尝试所有摄像头
                 window.appModules.status.updateStatus(window.getTextSync('statusUsingAlternative'));
                 for (const camera of cameras) {
                     console.log('Attempting to connect to camera:', camera.label || 'Unknown camera');

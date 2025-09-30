@@ -1,7 +1,7 @@
 {
-  "name": "virtual-camera-display",
+  "name": "virtual-camera-assistant",
   "version": "0.0.10",
-  "description": "Borderless Electron Application for Displaying Virtual Camera",
+  "description": "Borderless Electron Application for Virtual Camera Assistant",
   "main": "index.js",
   "scripts": {
     "start": "electron index.js",
@@ -11,7 +11,7 @@
   },
   "keywords": [
     "electron",
-    "obs",
+
     "virtual-camera",
     "camera"
   ],
@@ -22,7 +22,7 @@
     "electron-builder": "^25.0.0"
   },
   "build": {
-    "appId": "com.plumeink.virtual-camera-display",
+    "appId": "com.plumeink.virtual-camera-assistant",
     "productName": "VCD",
     "directories": {
       "output": "dist"

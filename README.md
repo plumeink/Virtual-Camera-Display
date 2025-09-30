@@ -1,10 +1,26 @@
 # Virtual Camera Assistant
 
-This is an Electron-based Virtual Camera display tool that supports automatic detection of virtual camera, video streaming display, resolution adjustment, and other features.
+## Project Introduction
+
+This is a specialized Electron-based application designed to solve a common problem in live streaming workflows: **providing a virtual camera capture method for streaming scenarios where traditional window capture is not sufficient or convenient**. The tool creates a borderless window that displays the virtual camera feed, making it easier to integrate virtual camera sources into various streaming software.
+
+## Project Purpose
+
+The primary motivation behind this project is to address the limitations of traditional window capture methods in live streaming. When using virtual cameras, it can be challenging to capture the virtual camera feed directly in some streaming applications. This tool bridges that gap by providing a dedicated display window that can be easily captured by any streaming software that supports window capture.
+
+## Key Features
+
+- **🎯 Automatic Virtual Camera Detection**: Smartly identifies and connects to virtual cameras using keyword matching
+- **🖼️ Borderless Display**: Creates a clean, borderless window optimized for capturing by streaming software
+- **📐 Flexible Resolution Support**: Offers multiple preset resolutions and custom resolution input
+- **🖱️ Intuitive Controls**: Double-click to toggle fullscreen mode, mouse hover to reveal control buttons
+- **🔄 Auto-adaptive Window**: Window size automatically adjusts to match the video stream dimensions
+- **🔍 Resolution Information**: Displays current video resolution for reference
+- **❓ Troubleshooting Assistance**: Provides help for camera access issues
 
 ## Project Structure
 
-The project adopts a modular architecture with code layered by function to improve maintainability and scalability.
+The project adopts a modular architecture to enhance maintainability and scalability:
 
 ```
 ├── src/                # Source code directory
@@ -19,18 +35,9 @@ The project adopts a modular architecture with code layered by function to impro
 ├── index.js            # Electron main process file
 ├── preload.js          # Electron preload script
 ├── package.json        # Project configuration and dependencies
+├── lang/               # Language files for internationalization
 └── README.md           # Project documentation
 ```
-
-## Features
-
-- 📷 Automatically detect virtual camera
-- 📺 Display real-time camera video stream
-- 📐 Support multiple preset resolutions and custom resolutions
-- 🖱️ Double-click to switch fullscreen display
-- 📊 Show current video resolution information
-- 🎯 Window automatically adapts to video size
-- ❓ Provide help for camera access issues
 
 ## Module Description
 
@@ -41,26 +48,29 @@ The project adopts a modular architecture with code layered by function to impro
 
 ## Development Environment Setup
 
-1. Ensure Node.js and npm are installed
-2. Clone the project code
+1. Ensure Node.js and npm are installed on your system
+2. Clone the project repository
 3. Install dependencies: `npm install`
-4. Start development server: `npm start`
-5. Build application: `npm run dist`
+4. Start the development server: `npm start`
+5. Build the application: `npm run dist`
+6. Create a portable build: `npm run dist-portable`
 
 ## Usage
 
-1. Ensure virtual camera is started
-2. Run the application, it will automatically try to connect to virtual camera
-3. If connection fails, you can manually select the camera from the device list
-4. You can choose preset resolutions or enter custom resolutions
-5. Hover the mouse over the window to display control buttons and resolution information
-6. Double-click the video area to switch fullscreen mode
+1. Ensure your virtual camera is active
+2. Launch the application - it will automatically attempt to connect to your virtual camera
+3. If automatic connection fails, manually select the camera from the device dropdown list
+4. Choose from preset resolutions or enter custom dimensions as needed
+5. Hover your mouse over the window to reveal control buttons and resolution information
+6. Double-click the video area to toggle fullscreen mode
+7. Use your streaming software to capture this application window
 
 ## Notes
 
-- The application requires camera access permissions
-- If you cannot access the camera, please check system permission settings
-- On Windows, you may need to run the application as administrator
+- The application requires camera access permissions to function correctly
+- If you encounter issues accessing the camera, please check your system permission settings
+- On Windows, you may need to run the application with administrator privileges
+- The tool is primarily designed for use with virtual cameras, but can also display feeds from physical cameras
 
 ## License
 

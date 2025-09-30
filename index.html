@@ -351,11 +351,11 @@
                 try {
                     updateStatus(i18n.t('accessingCamera'));
 
-                    // 尝试获取OBS虚拟摄像头的原始分辨率
+                    // 尝试获取虚拟摄像头的原始分辨率
                     // 不设置固定尺寸限制，让摄像头使用其原生分辨率
                     const basicConstraints = {
                         video: {
-                            width: { ideal: 1920 },  // 设置较高的理想值，让OBS可以返回其实际分辨率
+                            width: { ideal: 1920 },  // 设置较高的理想值，让虚拟摄像头可以返回其实际分辨率
                             height: { ideal: 1080 },
                             frameRate: { ideal: 30 },
                             facingMode: 'environment', // 对于虚拟摄像头，environment模式更合适
@@ -551,30 +551,30 @@
                     
                     deviceSelector.style.display = 'block';
                     
-                    // 定义更多OBS虚拟摄像头可能的标签关键词
-                    const obsKeywords = ['obs', 'virtual', '虚拟', 'virtual camera', '虚拟摄像头', 'obs-camera'];
+                    // 定义更多虚拟摄像头可能的标签关键词
+                    const virtualCameraKeywords = ['virtual', '虚拟', 'virtual camera', '虚拟摄像头'];
                     
-                    // 尝试连接虚拟摄像头 (OBS Virtual Camera)
-                    let obsCamera = null;
+                    // 尝试连接虚拟摄像头
+                    let virtualCamera = null;
                     for (const camera of cameras) {
                         if (camera.label) {
                             const lowerLabel = camera.label.toLowerCase();
-                            if (obsKeywords.some(keyword => lowerLabel.includes(keyword))) {
-                                obsCamera = camera;
+                            if (virtualCameraKeywords.some(keyword => lowerLabel.includes(keyword))) {
+                                virtualCamera = camera;
                                 break;
                             }
                         }
                     }
 
-                    if (obsCamera) {
-                        updateStatus(i18n.t('obsCameraFound') + obsCamera.label);
-                        console.log(i18n.t('connectingObsCamera'), obsCamera.label);
-                        const success = await startVideoStream(obsCamera.deviceId);
+                    if (virtualCamera) {
+                        updateStatus(i18n.t('virtualCameraFound') + virtualCamera.label);
+                        console.log(i18n.t('connectingVirtualCamera'), virtualCamera.label);
+                        const success = await startVideoStream(virtualCamera.deviceId);
                         if (!success) {
-                            // 如果OBS虚拟摄像头连接失败，尝试所有可用摄像头
-                            updateStatus(i18n.t('obsCameraFailed'));
+                            // 如果虚拟摄像头连接失败，尝试所有可用摄像头
+                            updateStatus(i18n.t('virtualCameraFailed'));
                             for (const camera of cameras) {
-                                if (camera.deviceId !== obsCamera.deviceId) {
+                                if (camera.deviceId !== virtualCamera.deviceId) {
                                     console.log(i18n.t('tryingOtherCamera'), camera.label);
                                     if (await startVideoStream(camera.deviceId)) {
                                         return;
@@ -584,8 +584,8 @@
                             updateStatus(i18n.t('allCamerasFailed'), true);
                         }
                     } else {
-                        // 如果没有找到OBS虚拟摄像头，尝试所有摄像头
-                        updateStatus(i18n.t('noObsCameraFound'));
+                        // 如果没有找到虚拟摄像头，尝试所有摄像头
+                        updateStatus(i18n.t('noVirtualCameraFound'));
                         for (const camera of cameras) {
                             console.log(i18n.t('tryingCamera'), camera.label || i18n.t('unknownCamera'));
                             if (await startVideoStream(camera.deviceId)) {
