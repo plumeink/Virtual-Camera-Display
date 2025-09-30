@@ -31,7 +31,9 @@
       "index.js",
       "index.html",
       "package.json",
-      "preload.js"
+      "preload.js",
+      "lang/**/*.json",
+      "i18n.js"
     ],
     "win": {
       "target": "portable",
