@@ -1,5 +1,7 @@
 # Virtual Camera Assistant
 
+[中文文档](docs/README_zh.md)
+
 ## Project Introduction
 
 This is a specialized Electron-based application designed to solve a common problem in live streaming workflows: **providing a virtual camera capture method for streaming scenarios where traditional window capture is not sufficient or convenient**. The tool creates a borderless window that displays the virtual camera feed, making it easier to integrate virtual camera sources into various streaming software.
@@ -17,6 +19,12 @@ The primary motivation behind this project is to address the limitations of trad
 - **🔄 Auto-adaptive Window**: Window size automatically adjusts to match the video stream dimensions
 - **🔍 Resolution Information**: Displays current video resolution for reference
 - **❓ Troubleshooting Assistance**: Provides help for camera access issues
+
+## Download
+
+You can download the latest release of the application from the GitHub repository:
+
+[🔗 Download Latest Release](https://github.com/plumeink/Virtual-Camera-Assistant/releases/latest)
 
 ## Project Structure
 
@@ -75,7 +83,3 @@ The project adopts a modular architecture to enhance maintainability and scalabi
 ## License
 
 MPL-2.0 License
-
----
-
-[中文版本](docs/README_zh.md)
