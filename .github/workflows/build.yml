@@ -58,8 +58,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/VCD-${{ env.VERSION }}-win-x64.exe
-        asset_name: VCD-${{ env.VERSION }}-win-x64.exe
+        asset_path: ./dist/VCA-${{ env.VERSION }}-win-x64.exe
+        asset_name: VCA-${{ env.VERSION }}-win-x64.exe
         asset_content_type: application/octet-stream
 
     - name: Cleanup Old Workflow Runs
