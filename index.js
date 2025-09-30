@@ -24,15 +24,18 @@ function createWindow() {
         transparent: false, // 可根据需要设置为透明
         alwaysOnTop: false, // 可根据需要置顶
         resizable: true, // 允许程序调整窗口大小
+        icon: path.join(__dirname, 'icon.png'), // 可选：添加应用图标
+        backgroundThrottling: false, // 禁用后台性能限制
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,
             webSecurity: false, // 禁用web安全策略以便访问摄像头
             allowRunningInsecureContent: false,
-            preload: path.join(__dirname, 'preload.js')
-        },
-        icon: path.join(__dirname, 'icon.png') // 可选：添加应用图标
+            preload: path.join(__dirname, 'preload.js'),
+            offscreen: false, // 保持正常的渲染模式
+            backgroundThrottling: false // 禁用web安全策略以便访问摄像头
+        }
     });
 
     // 加载包含摄像头显示的HTML

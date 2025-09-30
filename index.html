@@ -797,14 +797,73 @@
         }
     }
 
-    // 处理页面可见性变化
+    // 处理页面可见性变化 - 修改为保活模式
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            // 页面隐藏时暂停视频
-            videoElement.pause();
+            // 页面隐藏时保持视频播放（不再暂停）
+            console.log('页面隐藏，保持视频播放');
+            // 确保视频继续播放，添加额外的保活逻辑
+            keepVideoAlive();
         } else {
-            // 页面显示时恢复视频
-            videoElement.play().catch(e => console.error('恢复播放失败:', e));
+            // 页面显示时确保视频正常播放
+            videoElement.play().catch(e => {
+                console.error('恢复播放失败:', e);
+                // 尝试重新初始化视频流
+                setTimeout(() => {
+                    if (currentStream) {
+                        console.log('尝试重新播放视频');
+                        videoElement.play().catch(innerError => {
+                            console.error('再次尝试播放失败:', innerError);
+                            // 如果仍然失败，考虑重新连接摄像头
+                            autoConnectCamera();
+                        });
+                    }
+                }, 500);
+            });
+        }
+    });
+
+    // 保活功能 - 确保视频在后台继续播放
+    let keepAliveInterval = null;
+    
+    function keepVideoAlive() {
+        // 清除之前的定时器（如果存在）
+        if (keepAliveInterval) {
+            clearInterval(keepAliveInterval);
+        }
+        
+        // 设置新的定时器，定期检查并保持视频流活跃
+        keepAliveInterval = setInterval(() => {
+            if (document.hidden && currentStream && videoElement) {
+                try {
+                    // 检查视频是否仍然在播放
+                    if (videoElement.paused) {
+                        console.log('视频在后台被暂停，尝试恢复播放');
+                        videoElement.play().catch(e => {
+                            console.error('后台恢复播放失败:', e);
+                            // 如果播放失败，尝试重新初始化视频流
+                            if (currentStream) {
+                                const videoTrack = currentStream.getVideoTracks()[0];
+                                if (videoTrack && videoTrack.readyState === 'ended') {
+                                    console.log('视频轨道已结束，尝试重新连接摄像头');
+                                    autoConnectCamera();
+                                }
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('保活检查时发生错误:', error);
+                }
+            }
+        }, 2000); // 每2秒检查一次
+    }
+
+    // 当窗口重新获得焦点时清理保活定时器
+    window.addEventListener('focus', () => {
+        if (keepAliveInterval) {
+            clearInterval(keepAliveInterval);
+            keepAliveInterval = null;
+            console.log('窗口获得焦点，停止保活检查');
         }
     });
 
