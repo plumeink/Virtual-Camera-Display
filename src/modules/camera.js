@@ -4,6 +4,8 @@ const CameraModule = {
     deviceSelector: null,
     refreshBtn: null,
     currentStream: null,
+    isConnected: false,
+    currentDeviceName: '',
     
     // 初始化摄像头模块
     init() {
@@ -37,19 +39,19 @@ const CameraModule = {
             const devices = await navigator.mediaDevices.enumerateDevices();
             return devices.filter(device => device.kind === 'videoinput');
         } catch (error) {
-            console.error('获取摄像头设备失败:', error);
-            window.appModules.status.updateStatus('获取摄像头设备失败', true);
+            console.error('Error getting camera devices:', error);
+            window.appModules.status.updateStatus(window.getTextSync('errorGetDevices'), true);
             return [];
         }
     },
     
     // 填充设备选择器
     populateDeviceSelector(cameras) {
-        this.deviceSelector.innerHTML = '<option value="">选择摄像头...</option>';
+        this.deviceSelector.innerHTML = '<option value="">Select camera...</option>';
         cameras.forEach(camera => {
             const option = document.createElement('option');
             option.value = camera.deviceId;
-            option.textContent = camera.label || `摄像头 ${this.deviceSelector.options.length}`;
+            option.textContent = camera.label || `Camera ${this.deviceSelector.options.length}`;
             this.deviceSelector.appendChild(option);
         });
         this.deviceSelector.style.display = 'block';
@@ -61,7 +63,7 @@ const CameraModule = {
             // 先停止已有的流
             this.stopVideoStream();
             
-            window.appModules.status.updateStatus(`正在连接摄像头...`);
+            window.appModules.status.updateStatus(window.getTextSync('statusAccessing'));
             
             // 使用严格的约束条件尝试
             const constraints = {
@@ -78,7 +80,7 @@ const CameraModule = {
                 const looseConstraints = {
                     video: deviceId ? { deviceId: { exact: deviceId } } : true
                 };
-                window.appModules.status.updateStatus('使用备用设置尝试连接...');
+                window.appModules.status.updateStatus(window.getTextSync('statusUsingAlternative'));
                 stream = await navigator.mediaDevices.getUserMedia(looseConstraints);
                 console.log('使用宽松约束条件成功获取媒体流');
             }
@@ -131,18 +133,26 @@ const CameraModule = {
             // 启动稳定性检查
             setTimeout(checkStreamStability.bind(this), stabilizationInterval);
             
-            window.appModules.status.updateStatus('摄像头已连接: ' + videoTrack.label);
+            // 更新连接状态和设备名称
+            this.isConnected = true;
+            this.currentDeviceName = videoTrack.label;
+            
+            window.appModules.status.updateStatus(window.getTextSync('statusConnected') + videoTrack.label);
             window.appModules.status.hidePermissionHelp();
             
             // 监听视频流事件
             videoTrack.onended = () => {
                 console.log('视频轨道已结束');
-                window.appModules.status.updateStatus('摄像头连接已断开', true);
+                this.isConnected = false;
+                this.currentDeviceName = '';
+                window.appModules.status.updateStatus(window.getTextSync('statusDisconnected'), true);
             };
             
             videoTrack.onerror = (event) => {
                 console.error('视频轨道错误:', event);
-                window.appModules.status.updateStatus('摄像头出现错误', true);
+                this.isConnected = false;
+                this.currentDeviceName = '';
+                window.appModules.status.updateStatus(window.getTextSync('statusError'), true);
             };
             
             return true;
@@ -151,17 +161,17 @@ const CameraModule = {
             console.error('访问摄像头失败:', error);
             
             // 更详细的错误类型判断和处理
-            let errorMessage = '无法访问摄像头';
+            let errorMessage = window.getTextSync('errorCannotAccess');
             if (error.name === 'NotFoundError' || error.name === 'OverconstrainedError') {
-                errorMessage = '未找到摄像头设备，请确保OBS虚拟摄像头已启动';
+                errorMessage = window.getTextSync('errorNoDevice');
             } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                errorMessage = '摄像头访问被拒绝，请检查系统权限设置';
+                errorMessage = window.getTextSync('errorPermissionDenied');
             } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-                errorMessage = '摄像头被其他应用占用，请关闭占用摄像头的程序';
+                errorMessage = window.getTextSync('errorDeviceBusy');
             } else if (error.name === 'AbortError') {
-                errorMessage = '摄像头访问被中止，请稍后重试';
+                errorMessage = window.getTextSync('errorAborted');
             } else {
-                errorMessage += ': ' + error.message;
+                errorMessage = window.getTextSync('errorDeviceList') + error.message;
             }
             
             window.appModules.status.updateStatus(errorMessage, true);
@@ -184,11 +194,11 @@ const CameraModule = {
     
     // 自动尝试连接摄像头
     async autoConnectCamera() {
-        window.appModules.status.updateStatus('正在搜索摄像头...');
+        window.appModules.status.updateStatus(window.getTextSync('statusSearching'));
         window.appModules.status.hidePermissionHelp();
         
         // 清理设备选择器
-        this.deviceSelector.innerHTML = '<option value="">选择摄像头...</option>';
+        this.deviceSelector.innerHTML = '<option value="">Select camera...</option>';
         this.deviceSelector.style.display = 'none';
         
         try {
@@ -197,7 +207,7 @@ const CameraModule = {
             console.log('找到的摄像头数量:', cameras.length);
             
             if (cameras.length === 0) {
-                window.appModules.status.updateStatus('未找到任何摄像头设备', true);
+                window.appModules.status.updateStatus(window.getTextSync('statusNoDevices'), true);
                 window.appModules.status.showPermissionHelp();
                 return;
             }
@@ -205,10 +215,10 @@ const CameraModule = {
             // 填充设备选择器
             this.populateDeviceSelector(cameras);
             
-            // 定义更多OBS虚拟摄像头可能的标签关键词
-            const obsKeywords = ['obs', 'virtual', '虚拟', 'virtual camera', '虚拟摄像头', 'obs-camera'];
+            // 定义更多虚拟摄像头可能的标签关键词
+            const obsKeywords = ['obs', 'virtual', 'virtual camera', 'obs-camera'];
             
-            // 尝试连接虚拟摄像头 (OBS Virtual Camera)
+            // 尝试连接虚拟摄像头
             let obsCamera = null;
             for (const camera of cameras) {
                 if (camera.label) {
@@ -221,12 +231,12 @@ const CameraModule = {
             }
             
             if (obsCamera) {
-                window.appModules.status.updateStatus(`找到OBS虚拟摄像头: ${obsCamera.label}`);
-                console.log('尝试连接OBS虚拟摄像头:', obsCamera.label);
+                window.appModules.status.updateStatus(window.getTextSync('statusObsFound') + obsCamera.label);
+                console.log('尝试连接虚拟摄像头:', obsCamera.label);
                 const success = await this.startVideoStream(obsCamera.deviceId);
                 if (!success) {
-                    // 如果OBS虚拟摄像头连接失败，尝试所有可用摄像头
-                    window.appModules.status.updateStatus('OBS虚拟摄像头连接失败，尝试其他摄像头...');
+                    // 如果虚拟摄像头连接失败，尝试所有可用摄像头
+                    window.appModules.status.updateStatus(window.getTextSync('statusObsFailed'));
                     for (const camera of cameras) {
                         if (camera.deviceId !== obsCamera.deviceId) {
                             console.log('尝试连接备用摄像头:', camera.label);
@@ -235,22 +245,22 @@ const CameraModule = {
                             }
                         }
                     }
-                    window.appModules.status.updateStatus('所有摄像头连接失败', true);
+                    window.appModules.status.updateStatus(window.getTextSync('statusAllFailed'), true);
                 }
             } else {
                 // 如果没有找到OBS虚拟摄像头，尝试所有摄像头
-                window.appModules.status.updateStatus('未找到OBS虚拟摄像头，尝试连接可用摄像头...');
+                window.appModules.status.updateStatus(window.getTextSync('statusUsingAlternative'));
                 for (const camera of cameras) {
-                    console.log('尝试连接摄像头:', camera.label || '未知摄像头');
+                    console.log('Attempting to connect to camera:', camera.label || 'Unknown camera');
                     if (await this.startVideoStream(camera.deviceId)) {
                         return;
                     }
                 }
-                window.appModules.status.updateStatus('所有摄像头连接失败', true);
+                window.appModules.status.updateStatus(window.getTextSync('statusAllFailed'), true);
             }
         } catch (error) {
             console.error('自动连接摄像头过程中发生错误:', error);
-            window.appModules.status.updateStatus('自动连接失败: ' + error.message, true);
+            window.appModules.status.updateStatus(window.getTextSync('statusAutoFailed') + error.message, true);
             window.appModules.status.showPermissionHelp();
         }
     }

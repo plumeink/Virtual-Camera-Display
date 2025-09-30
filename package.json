@@ -1,6 +1,6 @@
 {
   "name": "virtual-camera-display",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Borderless Electron Application for Displaying Virtual Camera",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,6 @@
   },
   "keywords": [
     "electron",
-    "obs",
     "virtual-camera",
     "camera"
   ],
@@ -31,7 +30,8 @@
       "index.js",
       "index.html",
       "package.json",
-      "preload.js"
+      "preload.js",
+      "lang/"
     ],
     "win": {
       "target": "portable",

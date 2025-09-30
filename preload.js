@@ -1,32 +1,32 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// 向渲染进程暴露有限的API
+// Expose limited API to renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
-  // 发送视频尺寸信息到主进程
+  // Send video size information to main process
   updateWindowSize: (dimensions) => {
-    // 支持两种调用方式：1. 传入对象 {width, height} 2. 传入两个独立参数 width, height
+    // Support two calling methods: 1. Pass object {width, height} 2. Pass two separate parameters width, height
     let width, height;
     if (typeof dimensions === 'object' && dimensions !== null) {
-      // 第一种情况：传入了对象
+      // First case: Object passed
       width = dimensions.width;
       height = dimensions.height;
     } else {
-      // 第二种情况：传入了两个独立参数
+      // Second case: Two separate parameters passed
       width = dimensions;
       height = arguments[1];
     }
     
-    console.log('发送视频尺寸信息到主进程:', width, 'x', height);
+    console.log('Sending video dimensions to main process:', width, 'x', height);
     ipcRenderer.send('update-window-size', { width, height });
   },
   
-  // 关闭窗口
+  // Close window
   closeWindow: () => {
     ipcRenderer.send('close-window');
   }
 });
 
-// 监听主进程消息
+// Listen for messages from main process
 ipcRenderer.on('message', (event, message) => {
-  console.log('从主进程收到消息:', message);
+  console.log('Received message from main process:', message);
 });

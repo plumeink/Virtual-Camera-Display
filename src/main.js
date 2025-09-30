@@ -1,41 +1,41 @@
-// 应用主入口文件
+// Application main entry file
 
-// 初始化应用
+// Initialize application
 function initApp() {
-    // 检查媒体设备支持
+    // Check media device support
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.error('浏览器不支持摄像头访问');
+        console.error('Browser does not support camera access');
         const statusElement = document.getElementById('status');
         if (statusElement) {
-            statusElement.textContent = '您的浏览器不支持摄像头访问';
+            statusElement.textContent = window.getTextSync('statusBrowserNotSupported');
             statusElement.style.color = '#ff6b6b';
         }
         return;
     }
     
-    // 初始化各个模块
+    // Initialize all modules
     try {
-        // 初始化状态模块
+        // Initialize status module
         window.appModules.status.init();
         
-        // 初始化摄像头模块
+        // Initialize camera module
         window.appModules.camera.init();
         
-        // 初始化分辨率模块
+        // Initialize resolution module
         window.appModules.resolution.init();
         
-        // 初始化UI模块
+        // Initialize UI module
         window.appModules.ui.init();
         
-        console.log('所有模块初始化完成');
+        console.log('All modules initialized');
         
-        // 等待一会儿再尝试连接，确保权限系统已就绪
+        // Wait a moment before attempting to connect to ensure permission system is ready
         setTimeout(() => {
             window.appModules.camera.autoConnectCamera();
         }, 500);
     } catch (error) {
-        console.error('应用初始化失败:', error);
-        window.appModules.status.updateStatus('应用初始化失败: ' + error.message, true);
+        console.error('Application initialization failed:', error);
+        window.appModules.status.updateStatus('Application initialization failed: ' + error.message, true);
     }
 }
 
@@ -49,15 +49,15 @@ if (document.readyState === 'loading') {
 
 // 添加全局错误处理
 window.addEventListener('error', (event) => {
-    console.error('全局错误:', event.error);
+    console.error('Global error:', event.error);
     if (window.appModules && window.appModules.status) {
-        window.appModules.status.updateStatus('应用发生错误，请重启应用', true);
+        window.appModules.status.updateStatus('Application error occurred, please restart the application', true);
     }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-    console.error('未处理的Promise拒绝:', event.reason);
+    console.error('Unhandled Promise rejection:', event.reason);
     if (window.appModules && window.appModules.status) {
-        window.appModules.status.updateStatus('应用发生异步错误，请重启应用', true);
+        window.appModules.status.updateStatus('Application async error occurred, please restart the application', true);
     }
 });

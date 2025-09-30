@@ -1,6 +1,6 @@
-# OBS Virtual Camera Assistant
+# Virtual Camera Assistant
 
-This is an Electron-based OBS Virtual Camera display tool that supports automatic detection of OBS virtual camera, video streaming display, resolution adjustment, and other features.
+This is an Electron-based Virtual Camera display tool that supports automatic detection of virtual camera, video streaming display, resolution adjustment, and other features.
 
 ## Project Structure
 
@@ -24,7 +24,7 @@ The project adopts a modular architecture with code layered by function to impro
 
 ## Features
 
-- 📷 Automatically detect OBS virtual camera
+- 📷 Automatically detect virtual camera
 - 📺 Display real-time camera video stream
 - 📐 Support multiple preset resolutions and custom resolutions
 - 🖱️ Double-click to switch fullscreen display
@@ -49,8 +49,8 @@ The project adopts a modular architecture with code layered by function to impro
 
 ## Usage
 
-1. Ensure OBS virtual camera is started
-2. Run the application, it will automatically try to connect to OBS virtual camera
+1. Ensure virtual camera is started
+2. Run the application, it will automatically try to connect to virtual camera
 3. If connection fails, you can manually select the camera from the device list
 4. You can choose preset resolutions or enter custom resolutions
 5. Hover the mouse over the window to display control buttons and resolution information

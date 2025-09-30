@@ -1,4 +1,4 @@
-// 分辨率管理模块
+// Resolution Management Module
 const ResolutionModule = {
     videoElement: null,
     resolutionDisplay: null,
@@ -7,7 +7,7 @@ const ResolutionModule = {
     customHeight: null,
     applyResolution: null,
     
-    // 初始化分辨率模块
+    // Initialize resolution module
     init() {
         this.videoElement = document.getElementById('cameraPreview');
         this.resolutionDisplay = document.getElementById('resolutionDisplay');
@@ -16,13 +16,13 @@ const ResolutionModule = {
         this.customHeight = document.getElementById('customHeight');
         this.applyResolution = document.getElementById('applyResolution');
         
-        // 初始化分辨率选择器
+        // Initialize resolution selector
         this.initializeResolutionSelector();
     },
     
-    // 初始化分辨率选择器
+    // Initialize resolution selector
     initializeResolutionSelector() {
-        // 预设分辨率选择事件
+        // Preset resolution selection event
         this.presetResolution.addEventListener('change', function() {
             const resolutionModule = window.appModules.resolution;
             if (this.value !== 'auto') {
@@ -35,7 +35,7 @@ const ResolutionModule = {
             }
         });
         
-        // 应用自定义分辨率
+        // Apply custom resolution
         this.applyResolution.addEventListener('click', function() {
             const resolutionModule = window.appModules.resolution;
             if (resolutionModule.customWidth.value && resolutionModule.customHeight.value) {
@@ -43,58 +43,58 @@ const ResolutionModule = {
                 const height = parseInt(resolutionModule.customHeight.value);
                 
                 if (width > 0 && height > 0) {
-                    window.appModules.status.updateStatus(`应用自定义分辨率: ${width}x${height}`);
+                    window.appModules.status.updateStatus(`${window.getTextSync('statusCustomResolution')}${width}x${height}`);
                     resolutionModule.applyCustomResolution(width, height);
                 } else {
-                    window.appModules.status.updateStatus('请输入有效的分辨率数值', true);
+                    window.appModules.status.updateStatus(window.getTextSync('statusInvalidResolution'), true);
                 }
             } else if (resolutionModule.presetResolution.value !== 'auto') {
                 const [width, height] = resolutionModule.presetResolution.value.split('x').map(Number);
-                window.appModules.status.updateStatus(`应用预设分辨率: ${width}x${height}`);
+                window.appModules.status.updateStatus(`${window.getTextSync('statusPresetResolution')}${width}x${height}`);
                 resolutionModule.applyCustomResolution(width, height);
             } else {
-                window.appModules.status.updateStatus('已切换为自动检测分辨率模式');
+                window.appModules.status.updateStatus(window.getTextSync('statusAutoResolution'));
                 resolutionModule.switchToAutoResolution();
             }
         });
     },
     
-    // 切换到自动检测分辨率模式
+    // Switch to auto resolution detection mode
     switchToAutoResolution() {
-        // 隐藏分辨率显示标签
+        // Hide resolution display label
         if (this.resolutionDisplay) {
             this.resolutionDisplay.classList.add('hidden');
         }
         
-        // 重置视频元素样式，让它能够自由调整大小以匹配摄像头原始分辨率
+        // Reset video element style to freely adjust size to match camera's original resolution
         if (this.videoElement) {
             this.videoElement.style.objectFit = 'none';
             this.videoElement.style.width = '100%';
             this.videoElement.style.height = '100%';
         }
         
-        // 强制重新获取摄像头原始分辨率
+        // Force re-acquisition of camera's original resolution
         if (window.appModules.camera.currentStream && this.videoElement) {
-            // 停止当前流
+            // Stop current stream
             window.appModules.camera.stopVideoStream();
-            // 重新连接摄像头以获取原始分辨率
+            // Reconnect camera to get original resolution
             setTimeout(() => {
                 window.appModules.camera.autoConnectCamera();
             }, 100);
         }
         
-        // 重新启用视频尺寸变化监听
+        // Re-enable video size change monitoring
         this.videoElement.onresize = function() {
             window.appModules.resolution.updateVideoDimensions();
         };
         
-        // 重新启用视频元数据加载完成事件监听
+        // Re-enable video metadata load completion event monitoring
         this.videoElement.onloadedmetadata = function() {
             window.appModules.resolution.updateVideoDimensions();
         };
     },
     
-    // 更新视频尺寸并发送给主进程
+    // Update video dimensions and send to main process
     updateVideoDimensions() {
         try {
             if (window.electronAPI && typeof window.electronAPI.updateWindowSize === 'function' && 
@@ -102,32 +102,32 @@ const ResolutionModule = {
                 
                 const videoWidth = this.videoElement.videoWidth;
                 const videoHeight = this.videoElement.videoHeight;
-                console.log('检测到摄像头实际像素尺寸:', videoWidth, 'x', videoHeight);
+                console.log('Detected camera actual pixel dimensions:', videoWidth, 'x', videoHeight);
                 
-                // 在界面上显示检测到的分辨率
+                // Display detected resolution on interface
                 if (this.resolutionDisplay) {
-                    this.resolutionDisplay.textContent = `分辨率: ${videoWidth}×${videoHeight}`;
+                    this.resolutionDisplay.textContent = `${window.getTextSync('labelResolutionDisplay')}${videoWidth}×${videoHeight}`;
                     this.resolutionDisplay.classList.remove('hidden');
                 }
                 
-                // 确保视频元素正确显示
+                // Ensure video element displays correctly
                 this.videoElement.style.display = 'block';
                 this.videoElement.style.width = '100%';
                 this.videoElement.style.height = '100%';
                 
-                // 直接发送原始摄像头尺寸，不做任何缩放或调整
-                // 确保窗口严格按照摄像头输出的像素比例调整
+                // Directly send original camera dimensions without any scaling or adjustment
+                // Ensure window strictly adjusts according to camera's output pixel ratio
                 window.electronAPI.updateWindowSize({ width: videoWidth, height: videoHeight });
             } else if (this.videoElement) {
-                console.warn('无法获取有效的视频尺寸，使用默认尺寸');
-                // 确保视频元素至少可见
+                console.warn('Cannot get valid video dimensions, using default dimensions');
+                // Ensure video element is at least visible
                 this.videoElement.style.display = 'block';
                 this.videoElement.style.width = '100%';
                 this.videoElement.style.height = '100%';
             }
         } catch (error) {
-            console.error('更新视频尺寸时发生错误:', error);
-            // 确保视频元素至少可见
+            console.error('Error updating video dimensions:', error);
+            // Ensure video element is at least visible
             if (this.videoElement) {
                 this.videoElement.style.display = 'block';
                 this.videoElement.style.width = '100%';
@@ -136,56 +136,56 @@ const ResolutionModule = {
         }
     },
     
-    // 应用自定义分辨率并调整窗口大小
+    // Apply custom resolution and adjust window size
     applyCustomResolution(width, height) {
-        console.log('应用自定义分辨率:', width, 'x', height);
+        console.log('Applying custom resolution:', width, 'x', height);
         
-        // 确认window.electronAPI是否存在
+        // Confirm window.electronAPI exists
         if (!window.electronAPI) {
-            console.error('electronAPI对象不存在');
+            console.error('electronAPI object does not exist');
             return;
         }
         
         if (!window.electronAPI.updateWindowSize) {
-            console.error('updateWindowSize方法不存在');
+            console.error('updateWindowSize method does not exist');
             return;
         }
         
-        // 尝试修改视频元素的样式以匹配指定分辨率
+        // Try modifying video element style to match specified resolution
         if (this.videoElement) {
             this.videoElement.style.objectFit = 'contain';
         }
         
-        // 禁用视频尺寸变化的自动检测，防止窗口大小被重置
+        // Disable automatic detection of video size changes to prevent window size from being reset
         this.videoElement.onresize = function() {
-            // 在手动设置分辨率模式下不响应视频尺寸变化
+            // Do not respond to video size changes in manual resolution setting mode
         };
         
-        // 使用setTimeout延迟调用，确保没有其他代码干扰
+        // Use setTimeout for delayed call to ensure no other code interference
         setTimeout(() => {
-            // 强制调整窗口大小到指定分辨率
-            console.log('调整窗口尺寸:', width, 'x', height);
+            // Force adjust window size to specified resolution
+            console.log('Adjusting window dimensions:', width, 'x', height);
             window.electronAPI.updateWindowSize({ width: width, height: height });
-            console.log('窗口尺寸更新请求已发送');
+            console.log('Window dimension update request sent');
         }, 100);
         
-        // 在分辨率显示区域显示当前使用的自定义分辨率
+        // Display currently used custom resolution in resolution display area
         if (this.resolutionDisplay) {
-            this.resolutionDisplay.textContent = `自定义分辨率: ${width}×${height}`;
+            this.resolutionDisplay.textContent = `${window.getTextSync('labelCustomResolution')}${width}×${height}`;
             this.resolutionDisplay.classList.remove('hidden');
         }
     },
     
-    // 强制设置窗口尺寸（不依赖摄像头自动检测）
+    // Force set window size (independent of camera auto-detection)
     forceWindowSize(width, height) {
         if (window.electronAPI && typeof window.electronAPI.updateWindowSize === 'function') {
-            // 直接发送指定尺寸，与自动检测模式保持一致的窗口大小更新行为
-            console.log('强制设置窗口尺寸:', width, 'x', height);
+            // Directly send specified dimensions, maintaining consistent window size update behavior with auto-detection mode
+            console.log('Forcing window dimensions:', width, 'x', height);
             window.electronAPI.updateWindowSize({ width: width, height: height });
         }
     }
 };
 
-// 导出模块
+// Export module
 window.appModules = window.appModules || {};
 window.appModules.resolution = ResolutionModule;

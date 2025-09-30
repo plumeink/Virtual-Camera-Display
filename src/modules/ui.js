@@ -1,22 +1,22 @@
-// UI交互模块
+// UI Interaction Module
 const UIModule = {
     closeBtn: null,
     
-    // 初始化UI模块
+    // Initialize UI Module
     init() {
         this.closeBtn = document.getElementById('closeBtn');
         
-        // 绑定关闭窗口事件
+        // Bind close window event
         this.closeBtn.addEventListener('click', this.closeWindow.bind(this));
         
-        // 设置页面可见性变化处理
+        // Set up page visibility handler
         this.setupVisibilityHandler();
         
-        // 设置定期检查摄像头连接状态
+        // Set up periodic camera connection check
         this.setupCameraConnectionCheck();
     },
     
-    // 关闭窗口
+    // Close window
     closeWindow() {
         if (window.electronAPI && window.electronAPI.closeWindow) {
             window.electronAPI.closeWindow();
@@ -25,27 +25,27 @@ const UIModule = {
         }
     },
     
-    // 设置页面可见性变化处理
+    // Set up page visibility handler
     setupVisibilityHandler() {
         document.addEventListener('visibilitychange', () => {
             const videoElement = document.getElementById('cameraPreview');
             if (document.hidden) {
-                // 页面隐藏时暂停视频
+                // Pause video when page is hidden
                 videoElement.pause();
             } else {
-                // 页面显示时恢复视频
-                videoElement.play().catch(e => console.error('恢复播放失败:', e));
+                // Resume video when page is visible
+                videoElement.play().catch(e => console.error('Failed to resume playback:', e));
             }
         });
     },
     
-    // 设置定期检查摄像头连接状态
+    // Set up periodic camera connection check
     setupCameraConnectionCheck() {
         setInterval(() => {
             if (window.appModules.camera && window.appModules.camera.currentStream) {
                 const videoTrack = window.appModules.camera.currentStream.getVideoTracks()[0];
                 if (videoTrack && videoTrack.readyState === 'ended') {
-                    window.appModules.status.updateStatus('摄像头连接丢失', true);
+                    window.appModules.status.updateStatus(window.getTextSync('statusCameraLost'), true);
                     window.appModules.camera.stopVideoStream();
                 }
             }
@@ -53,6 +53,6 @@ const UIModule = {
     }
 };
 
-// 导出模块
+// Export module
 window.appModules = window.appModules || {};
 window.appModules.ui = UIModule;

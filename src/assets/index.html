@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>摄像头预览 - OBS虚拟摄像头助手</title>
+    <title>Camera Preview - Virtual Camera Assistant</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,9 +20,9 @@
         
         <!-- 控制按钮区域 -->
         <div id="controls" class="no-drag">
-            <button id="refreshBtn" title="刷新摄像头">🔄</button>
-            <button id="closeBtn" title="关闭窗口">✕</button>
-            <button id="helpBtn" title="帮助">?</button>
+            <button id="refreshBtn" title="Refresh camera">🔄</button>
+            <button id="closeBtn" title="Close window">✕</button>
+            <button id="helpBtn" title="Help">?</button>
         </div>
         
         <!-- 设备选择器 -->
@@ -31,7 +31,7 @@
         <!-- 分辨率选择器 -->
         <div id="resolutionSelector" class="no-drag">
             <select id="presetResolution">
-                <option value="auto">自动检测分辨率</option>
+                <option value="auto">Auto detect resolution</option>
                 <option value="640x480">640×480</option>
                 <option value="800x600">800×600</option>
                 <option value="1024x768">1024×768</option>
@@ -40,26 +40,26 @@
                 <option value="1920x1080">1920×1080 (FHD)</option>
             </select>
             <div class="custom-resolution">
-                <input type="number" id="customWidth" placeholder="宽" min="1">
+                <input type="number" id="customWidth" placeholder="Width" min="1">
                 <span>×</span>
-                <input type="number" id="customHeight" placeholder="高" min="1">
+                <input type="number" id="customHeight" placeholder="Height" min="1">
             </div>
-            <button id="applyResolution">应用</button>
+            <button id="applyResolution">Apply</button>
         </div>
     </div>
 
     <!-- 权限帮助弹窗 -->
     <div id="permissionHelp" class="no-drag hidden">
-        <h3>摄像头访问问题</h3>
-        <p>如果您无法访问摄像头，请尝试以下解决方案：</p>
+        <h3>Camera Access Issue</h3>
+        <p>If you cannot access the camera, please try the following solutions:</p>
         <ul>
-            <li>确保OBS虚拟摄像头已启动</li>
-            <li>检查系统摄像头权限设置</li>
-            <li>关闭其他正在使用摄像头的程序</li>
+            <li>Ensure the virtual camera is started</li>
+            <li>Check system camera permission settings</li>
+            <li>Close other programs using the camera</li>
         </ul>
         <div class="permission-buttons">
-            <button id="retryBtn">重试</button>
-            <button id="closeHelpBtn">关闭</button>
+            <button id="retryBtn">Retry</button>
+            <button id="closeHelpBtn">Close</button>
         </div>
     </div>
 

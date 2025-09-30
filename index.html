@@ -1,9 +1,29 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OBS虚拟摄像头显示</title>
+    <title>Loading...</title>
+    <script type="module">
+        // 导入语言工具函数
+        import { getText, getTextSync, setLanguage, getCurrentLanguage, ensureResourcesLoaded } from './language.js';
+        
+        // 让全局可以访问这些函数
+        window.getText = getText;
+        window.getTextSync = getTextSync;
+        window.setLanguage = setLanguage;
+        window.getCurrentLanguage = getCurrentLanguage;
+        window.ensureResourcesLoaded = ensureResourcesLoaded;
+        
+        // 等待语言资源加载完成后更新页面标题
+        async function updatePageTitle() {
+            await ensureResourcesLoaded();
+            document.title = getTextSync('appTitle');
+        }
+        
+        // 初始化时更新页面标题
+        updatePageTitle();
+    </script>
     <style>
         body {
             margin: 0;
@@ -227,48 +247,49 @@
 <div id="videoContainer" class="draggable">
     <video id="cameraPreview" autoplay playsinline></video>
 
-    <div id="status">正在初始化...</div>
-    <div id="resolutionDisplay">分辨率: 未检测到</div>
+    <div id="status">Loading...</div>
+    <div id="resolutionDisplay" class="hidden"></div>
 
     <div id="controls" class="no-drag">
-        <button class="control-btn" id="refreshBtn">刷新摄像头</button>
-        <button class="control-btn" id="helpBtn">权限帮助</button>
-        <button class="control-btn" id="closeBtn">关闭窗口</button>
+        <select id="languageSelector" class="control-btn" style="background: rgba(0, 0, 0, 0.7); color: white; border: none; padding: 8px 12px; cursor: pointer;">
+            <option value="zh">Chinese</option>
+            <option value="en">English</option>
+        </select>
+        <button class="control-btn" id="refreshBtn">Refresh</button>
+        <button class="control-btn" id="closeBtn">Close</button>
+        <button class="control-btn" id="helpBtn">Help</button>
     </div>
 
     <select id="deviceSelector" class="no-drag" style="display: none;">
-        <option value="">选择摄像头...</option>
+        <option value="">Select camera...</option>
     </select>
 
     <!-- 分辨率选择器 -->
     <div id="resolutionSelector">
-        <label for="presetResolution">预设分辨率:</label>
+        <label for="presetResolution">Preset resolution:</label>
         <select id="presetResolution">
-            <option value="auto">自动检测</option>
-            <option value="1920x1080">1920x1080</option>
-            <option value="1280x720">1280x720</option>
-            <option value="1024x768">1024x768</option>
-            <option value="800x600">800x600</option>
-            <option value="640x480">640x480</option>
+            <option value="auto">Auto detect</option>
+            <option value="1920x1080">1920×1080</option>
+            <option value="1280x720">1280×720</option>
+            <option value="800x600">800×600</option>
+            <option value="640x480">640×480</option>
         </select>
-        <span>或自定义:</span>
-        <input type="number" id="customWidth" placeholder="宽" min="1" max="4096" size="4">
-        <span>x</span>
-        <input type="number" id="customHeight" placeholder="高" min="1" max="4096" size="4">
-        <button id="applyResolution" class="control-btn">应用</button>
+        <label>Custom resolution:</label>
+        <input type="number" id="customWidth" placeholder="Width" min="1" max="4096">
+        <input type="number" id="customHeight" placeholder="Height" min="1" max="4096">
+        <button id="applyResolution">Apply resolution</button>
     </div>
 
     <div id="permissionHelp">
-        <h3>摄像头访问被拒绝</h3>
-        <p>请按照以下步骤解决权限问题：</p>
+        <h3>Camera Permission Help</h3>
+        <p>If you can't access the virtual camera, please check the following:</p>
         <ul>
-            <li>1. 确保系统设置中已允许此应用访问摄像头</li>
-            <li>2. 检查OBS虚拟摄像头是否已启动</li>
-            <li>3. 确保没有其他应用正在独占使用摄像头</li>
-            <li>4. 尝试重新加载应用或重启计算机</li>
+            <li>Make sure the virtual camera is running</li>
+            <li>Confirm that the system has granted camera access permissions to this app</li>
+            <li>Check if any other application is using the camera</li>
         </ul>
-        <button class="help-btn" id="retryBtn">重试连接</button>
-        <button class="help-btn" id="closeHelpBtn">关闭</button>
+        <button class="help-btn" id="retryBtn">Retry</button>
+        <button class="help-btn" id="closeHelpBtn">Close</button>
     </div>
 </div>
 </div>
@@ -286,22 +307,44 @@
 
     let currentStream = null;
 
-    // 更新状态信息
-    function updateStatus(message, isError = false) {
-        statusElement.textContent = message;
-        statusElement.style.color = isError ? '#ff6b6b' : 'white';
-        console.log(isError ? '错误: ' + message : '状态: ' + message);
-
-        // 如果是权限错误，显示帮助信息
-        if (isError && (message.includes('拒绝') || message.includes('权限') || message.includes('不允许'))) {
-            showPermissionHelp();
+    // 等待语言模块加载完成并确保语言资源已加载
+        async function waitForLanguageModule() {
+            while (!window.getText) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            // 确保语言资源已加载
+            await ensureResourcesLoaded();
         }
+
+    // 更新状态显示
+    function updateStatus(message, isError = false) {
+        const statusElement = document.getElementById('status');
+        if (statusElement) {
+            // 直接使用传入的消息（已在生成处完成本地化）
+            statusElement.textContent = message;
+            statusElement.className = isError ? 'error' : '';
+        }
+        console.log(isError ? 'Error status:' : 'Status:', message);
     }
 
     // 显示权限帮助
-    function showPermissionHelp() {
-        permissionHelp.style.display = 'block';
-    }
+        async function showPermissionHelp() {
+            permissionHelp.style.display = 'block';
+            // 更新权限帮助文本
+            const helpTitle = permissionHelp.querySelector('h3');
+            const helpText = permissionHelp.querySelector('p');
+            const helpList = permissionHelp.querySelectorAll('li');
+            
+            await ensureResourcesLoaded();
+            
+            if (helpTitle) helpTitle.textContent = getTextSync('permissionHelpTitle');
+            if (helpText) helpText.textContent = getTextSync('permissionHelpText').split('\n')[0];
+            if (helpList.length >= 3) {
+                helpList[0].textContent = getTextSync('permissionHelpText').split('\n')[1];
+                helpList[1].textContent = getTextSync('permissionHelpText').split('\n')[2];
+                helpList[2].textContent = getTextSync('permissionHelpText').split('\n')[3];
+            }
+        }
 
     // 隐藏权限帮助
     function hidePermissionHelp() {
@@ -313,7 +356,7 @@
         if (currentStream) {
             currentStream.getTracks().forEach(track => {
                 track.stop();
-                console.log('停止视频轨道:', track.label);
+                console.log('Stopping video track:', track.label);
             });
             currentStream = null;
         }
@@ -324,24 +367,24 @@
         try {
             // 先尝试枚举设备，这不需要完整的摄像头权限
             const devices = await navigator.mediaDevices.enumerateDevices();
-            console.log('枚举设备结果:', devices);
+            console.log('Enumeration results:', devices);
             
             const videoDevices = devices.filter(device => device.kind === 'videoinput');
-            console.log('找到的视频设备数量:', videoDevices.length);
-            videoDevices.forEach(device => console.log('设备信息:', device.label, 'ID:', device.deviceId));
+            console.log('Number of video devices found:', videoDevices.length);
+            videoDevices.forEach(device => console.log('Device info:', device.label, 'ID:', device.deviceId));
             
             // 尝试请求一次权限，这有助于获取更详细的设备信息
             try {
                 await navigator.mediaDevices.getUserMedia({ video: { width: 1, height: 1 } });
-                console.log('成功获取基本摄像头权限');
+                console.log('Successfully obtained basic camera permissions');
             } catch (innerError) {
-                console.log('获取详细设备信息失败，但继续使用已有信息:', innerError.message);
+                console.log('Failed to get detailed device information, but continuing with available information:', innerError.message);
             }
             
             return videoDevices;
         } catch (error) {
             console.error('获取设备列表失败:', error);
-            updateStatus('获取设备列表时出错: ' + error.message, true);
+            updateStatus(`${getText('errorDeviceList')}${error.message}`, true);
             return [];
         }
     }
@@ -349,12 +392,12 @@
     // 填充设备选择器
     async function populateDeviceSelector() {
         const cameras = await getCameraDevices();
-        deviceSelector.innerHTML = '<option value="">选择摄像头...</option>';
+        deviceSelector.innerHTML = `<option value="">${getTextSync('selectCamera')}</option>`;
 
         cameras.forEach(camera => {
             const option = document.createElement('option');
             option.value = camera.deviceId;
-            option.textContent = camera.label || `摄像头 ${deviceSelector.options.length}`;
+            option.textContent = camera.label || `${getTextSync('cameraUnknown')}${deviceSelector.options.length}`;
             deviceSelector.appendChild(option);
         });
 
@@ -369,16 +412,19 @@
 
     // 启动指定摄像头的视频流
     async function startVideoStream(deviceId = null) {
+        // 确保语言资源已加载
+        await ensureResourcesLoaded();
+        
         stopVideoStream();
 
         try {
-            updateStatus('正在访问摄像头...');
+            updateStatus(getTextSync('statusAccessing'));
 
-            // 尝试获取OBS虚拟摄像头的原始分辨率
+            // 尝试获取虚拟摄像头的原始分辨率
             // 不设置固定尺寸限制，让摄像头使用其原生分辨率
             const basicConstraints = {
                 video: {
-                    width: { ideal: 1920 },  // 设置较高的理想值，让OBS可以返回其实际分辨率
+                    width: { ideal: 1920 },  // 设置较高的理想值，让虚拟摄像头可以返回其实际分辨率
                     height: { ideal: 1080 },
                     frameRate: { ideal: 30 },
                     facingMode: 'environment', // 对于虚拟摄像头，environment模式更合适
@@ -404,7 +450,7 @@
                 const looseConstraints = {
                     video: deviceId ? { deviceId: { exact: deviceId } } : true
                 };
-                updateStatus('使用备用设置尝试连接...');
+                updateStatus(getTextSync('statusUsingAlternative'));
                 stream = await navigator.mediaDevices.getUserMedia(looseConstraints);
                 console.log('使用宽松约束条件成功获取媒体流');
             }
@@ -450,7 +496,8 @@
                         // 在界面上显示检测到的分辨率
                         const resolutionDisplay = document.getElementById('resolutionDisplay');
                         if (resolutionDisplay) {
-                            resolutionDisplay.textContent = `分辨率: ${videoWidth}×${videoHeight}`;
+                            // 使用本地化文本显示分辨率
+                            resolutionDisplay.textContent = getTextSync('labelResolutionDisplay') + videoWidth + '×' + videoHeight;
                             resolutionDisplay.classList.remove('hidden');
                         }
                         
@@ -502,18 +549,18 @@
             // 启动稳定性检查
             setTimeout(checkStreamStability, stabilizationInterval);
             
-            updateStatus('摄像头已连接: ' + videoTrack.label);
+            updateStatus(getTextSync('statusConnected') + videoTrack.label);
             hidePermissionHelp();
 
             // 监听视频流事件
             videoTrack.onended = () => {
                 console.log('视频轨道已结束');
-                updateStatus('摄像头连接已断开', true);
+                updateStatus(getTextSync('statusDisconnected'), true);
             };
             
             videoTrack.onerror = (event) => {
                 console.error('视频轨道错误:', event);
-                updateStatus('摄像头出现错误', true);
+                updateStatus(getTextSync('statusError'), true);
             };
 
             return true;
@@ -521,16 +568,19 @@
         } catch (error) {
             console.error('访问摄像头失败:', error);
             
+            // 确保语言资源已加载
+            await ensureResourcesLoaded();
+            
             // 更详细的错误类型判断和处理
-            let errorMessage = '无法访问摄像头';
+            let errorMessage = getTextSync('errorCannotAccess');
             if (error.name === 'NotFoundError' || error.name === 'OverconstrainedError') {
-                errorMessage = '未找到摄像头设备，请确保OBS虚拟摄像头已启动';
+                errorMessage = getTextSync('errorNoDevice');
             } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                errorMessage = '摄像头访问被拒绝，请检查系统权限设置';
+                errorMessage = getTextSync('errorPermissionDenied');
             } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-                errorMessage = '摄像头被其他应用占用，请关闭占用摄像头的程序';
+                errorMessage = getTextSync('errorDeviceBusy');
             } else if (error.name === 'AbortError') {
-                errorMessage = '摄像头访问被中止，请稍后重试';
+                errorMessage = getTextSync('errorAborted');
             } else {
                 errorMessage += ': ' + error.message;
             }
@@ -546,7 +596,10 @@
 
     // 自动尝试连接摄像头
     async function autoConnectCamera() {
-        updateStatus('正在搜索摄像头...');
+        // 确保语言资源已加载
+        await ensureResourcesLoaded();
+        
+        updateStatus(getTextSync('statusSearching'));
         hidePermissionHelp();
 
         // 清理设备选择器
@@ -559,7 +612,7 @@
             console.log('找到的摄像头数量:', cameras.length);
 
             if (cameras.length === 0) {
-                updateStatus('未找到任何摄像头设备', true);
+                updateStatus(getTextSync('statusNoDevices'), true);
                 showPermissionHelp();
                 return;
             }
@@ -568,16 +621,16 @@
             cameras.forEach(camera => {
                 const option = document.createElement('option');
                 option.value = camera.deviceId;
-                option.textContent = camera.label || `摄像头 ${deviceSelector.options.length}`;
+                option.textContent = camera.label || `${getTextSync('cameraUnknown')}${deviceSelector.options.length}`;
                 deviceSelector.appendChild(option);
             });
             
             deviceSelector.style.display = 'block';
             
-            // 定义更多OBS虚拟摄像头可能的标签关键词
+            // 定义更多虚拟摄像头可能的标签关键词
             const obsKeywords = ['obs', 'virtual', '虚拟', 'virtual camera', '虚拟摄像头', 'obs-camera'];
             
-            // 尝试连接虚拟摄像头 (OBS Virtual Camera)
+            // 尝试连接虚拟摄像头
             let obsCamera = null;
             for (const camera of cameras) {
                 if (camera.label) {
@@ -590,12 +643,12 @@
             }
 
             if (obsCamera) {
-                updateStatus(`找到OBS虚拟摄像头: ${obsCamera.label}`);
-                console.log('尝试连接OBS虚拟摄像头:', obsCamera.label);
+                    updateStatus(`${getTextSync('statusObsFound')}${obsCamera.label}`);
+                    console.log('尝试连接虚拟摄像头:', obsCamera.label);
                 const success = await startVideoStream(obsCamera.deviceId);
                 if (!success) {
-                    // 如果OBS虚拟摄像头连接失败，尝试所有可用摄像头
-                    updateStatus('OBS虚拟摄像头连接失败，尝试其他摄像头...');
+                        // 如果虚拟摄像头连接失败，尝试所有可用摄像头
+                        updateStatus(getTextSync('statusObsFailed'));
                     for (const camera of cameras) {
                         if (camera.deviceId !== obsCamera.deviceId) {
                             console.log('尝试连接备用摄像头:', camera.label);
@@ -604,22 +657,22 @@
                             }
                         }
                     }
-                    updateStatus('所有摄像头连接失败', true);
-                }
-            } else {
-                // 如果没有找到OBS虚拟摄像头，尝试所有摄像头
-                updateStatus('未找到OBS虚拟摄像头，尝试连接可用摄像头...');
+                    updateStatus(getTextSync('statusAllFailed'), true);
+                    }
+                } else {
+                    // 如果没有找到虚拟摄像头，尝试所有摄像头
+                    updateStatus(getTextSync('statusAutoFailed') + getTextSync('errorNoDevice'));
                 for (const camera of cameras) {
                     console.log('尝试连接摄像头:', camera.label || '未知摄像头');
                     if (await startVideoStream(camera.deviceId)) {
                         return;
                     }
                 }
-                updateStatus('所有摄像头连接失败', true);
-            }
+                updateStatus(getTextSync('statusAllFailed'), true);
+                }
         } catch (error) {
             console.error('自动连接摄像头过程中发生错误:', error);
-            updateStatus('自动连接失败: ' + error.message, true);
+            updateStatus(`${getTextSync('statusAutoFailed')}${error.message}`, true);
             showPermissionHelp();
         }
     }
@@ -635,7 +688,7 @@
         }
     });
 
-    helpBtn.addEventListener('click', showPermissionHelp);
+    helpBtn.addEventListener('click', async () => await showPermissionHelp());
 
     retryBtn.addEventListener('click', autoConnectCamera);
 
@@ -660,25 +713,48 @@
 
     // 初始化
     document.addEventListener('DOMContentLoaded', async () => {
+        // 确保语言资源已加载
+        await ensureResourcesLoaded();
+        
         // 检查媒体设备支持
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            updateStatus('您的浏览器不支持摄像头访问', true);
+            updateStatus(getTextSync('statusBrowserNotSupported'), true);
             return;
         }
 
         // 初始化分辨率选择器
-        initializeResolutionSelector();
+        await initializeResolutionSelector();
         
         // 等待一会儿再尝试连接，确保权限系统已就绪
         setTimeout(autoConnectCamera, 500);
     });
     
     // 初始化分辨率选择器
-    function initializeResolutionSelector() {
+    async function initializeResolutionSelector() {
+        await ensureResourcesLoaded();
+        
         const presetResolution = document.getElementById('presetResolution');
         const customWidth = document.getElementById('customWidth');
         const customHeight = document.getElementById('customHeight');
         const applyResolution = document.getElementById('applyResolution');
+        
+        // 更新选择器标签文本
+        const resolutionLabel = document.querySelector('label[for="presetResolution"]');
+        if (resolutionLabel) resolutionLabel.textContent = getTextSync('selectResolution') + ':';
+        
+        const customResolutionLabel = document.querySelector('label:nth-of-type(2)');
+        if (customResolutionLabel) customResolutionLabel.textContent = getTextSync('labelCustomResolution');
+        
+        // 更新输入框占位符
+        customWidth.placeholder = getTextSync('placeholderWidth');
+        customHeight.placeholder = getTextSync('placeholderHeight');
+        
+        // 更新按钮文本
+        applyResolution.textContent = getTextSync('buttonApplyResolution');
+        
+        // 更新预设分辨率选项文本
+        const autoOption = presetResolution.querySelector('option[value="auto"]');
+        if (autoOption) autoOption.textContent = getTextSync('optionAuto');
         
         // 预设分辨率选择事件
         presetResolution.addEventListener('change', function() {
@@ -699,17 +775,17 @@
                 const height = parseInt(customHeight.value);
                 
                 if (width > 0 && height > 0) {
-                    updateStatus(`应用自定义分辨率: ${width}x${height}`);
+                    updateStatus(`${getTextSync('statusCustomResolution')}${width}x${height}`);
                     applyCustomResolution(width, height);
                 } else {
-                    updateStatus('请输入有效的分辨率数值', true);
+                    updateStatus(getTextSync('statusInvalidResolution'), true);
                 }
             } else if (presetResolution.value !== 'auto') {
                 const [width, height] = presetResolution.value.split('x').map(Number);
-                updateStatus(`应用预设分辨率: ${width}x${height}`);
+                updateStatus(`${getTextSync('statusPresetResolution')}${width}x${height}`);
                 applyCustomResolution(width, height);
             } else {
-                updateStatus('已切换为自动检测分辨率模式');
+                updateStatus(getTextSync('statusAutoResolution'));
                 
                 // 隐藏分辨率显示标签
                 const resolutionDisplay = document.getElementById('resolutionDisplay');
@@ -868,15 +944,124 @@
     });
 
     // 定期检查摄像头连接状态
-    setInterval(() => {
+    setInterval(async () => {
         if (currentStream) {
             const videoTrack = currentStream.getVideoTracks()[0];
             if (videoTrack && videoTrack.readyState === 'ended') {
-                updateStatus('摄像头连接丢失', true);
+                await ensureResourcesLoaded();
+                updateStatus(getTextSync('statusCameraLost'), true);
                 stopVideoStream();
             }
         }
     }, 5000);
+
+    // 初始化界面文本
+    document.addEventListener('DOMContentLoaded', async () => {
+        // 等待语言模块加载完成
+        await waitForLanguageModule();
+        
+        // 更新按钮文本
+        document.getElementById('refreshBtn').textContent = getTextSync('buttonRefresh');
+        document.getElementById('closeBtn').textContent = getTextSync('buttonClose');
+        document.getElementById('helpBtn').textContent = getTextSync('buttonHelp');
+        document.getElementById('retryBtn').textContent = getTextSync('buttonRetry');
+        document.getElementById('closeHelpBtn').textContent = getTextSync('buttonCloseHelp');
+        
+        // 更新设备选择器默认选项
+        const deviceSelector = document.getElementById('deviceSelector');
+        if (deviceSelector.options.length > 0) {
+            deviceSelector.options[0].textContent = getTextSync('selectCamera');
+        }
+        
+        // 设置语言选择器初始值
+        const languageSelector = document.getElementById('languageSelector');
+        languageSelector.value = getCurrentLanguage();
+        
+        // 添加语言切换事件监听
+        languageSelector.addEventListener('change', async function() {
+            const newLang = this.value;
+            if (await setLanguage(newLang)) {
+                await ensureResourcesLoaded();
+                
+                // 更新界面上的所有文本
+                document.getElementById('refreshBtn').textContent = getTextSync('buttonRefresh');
+                document.getElementById('closeBtn').textContent = getTextSync('buttonClose');
+                document.getElementById('helpBtn').textContent = getTextSync('buttonHelp');
+                document.getElementById('retryBtn').textContent = getTextSync('buttonRetry');
+                document.getElementById('closeHelpBtn').textContent = getTextSync('buttonCloseHelp');
+                
+                // 更新设备选择器
+                if (deviceSelector.options.length > 0) {
+                    deviceSelector.options[0].textContent = getTextSync('selectCamera');
+                }
+                
+                // 更新分辨率选择器
+                const resolutionLabel = document.querySelector('label[for="presetResolution"]');
+                if (resolutionLabel) resolutionLabel.textContent = getTextSync('selectResolution') + ':';
+                
+                const customResolutionLabel = document.querySelector('label:nth-of-type(2)');
+                if (customResolutionLabel) customResolutionLabel.textContent = getTextSync('labelCustomResolution');
+                
+                // 更新输入框占位符
+                const customWidth = document.getElementById('customWidth');
+                const customHeight = document.getElementById('customHeight');
+                if (customWidth) customWidth.placeholder = getTextSync('placeholderWidth');
+                if (customHeight) customHeight.placeholder = getTextSync('placeholderHeight');
+                
+                // 更新应用分辨率按钮
+                const applyResolution = document.getElementById('applyResolution');
+                if (applyResolution) applyResolution.textContent = getTextSync('buttonApplyResolution');
+                
+                // 更新预设分辨率选项
+                const presetResolution = document.getElementById('presetResolution');
+                const autoOption = presetResolution.querySelector('option[value="auto"]');
+                if (autoOption) autoOption.textContent = getTextSync('optionAuto');
+                
+                // 更新页面标题
+                document.title = getTextSync('appTitle');
+                
+                // 更新状态显示文本 - 简化方案
+                const statusElement = document.getElementById('status');
+                if (statusElement && statusElement.textContent) {
+                    const currentText = statusElement.textContent;
+                    
+                    // 直接尝试从当前文本中提取设备名称（不依赖任何外部状态）
+                    const nameMatch = currentText.match(/[:：]\s*(.+)/);
+                    
+                    // 检查当前是否显示的是连接状态（通过是否包含设备名称判断）
+                    if (nameMatch && nameMatch[1]) {
+                        // 如果包含设备名称，则更新为新语言的连接状态文本
+                        statusElement.textContent = getTextSync('statusConnected') + nameMatch[1];
+                    } else if (currentText.includes('摄像头已连接') || currentText.includes('Camera connected')) {
+                        // 备选方案：检查是否包含任何语言的连接状态文本
+                        statusElement.textContent = getTextSync('statusConnected');
+                    }
+                    
+                    // 同样处理断开连接状态
+                    if (currentText.includes('摄像头连接已断开') || currentText.includes('Camera disconnected')) {
+                        statusElement.textContent = getTextSync('statusDisconnected');
+                    }
+                    
+                    // 处理错误状态
+                    if (currentText.includes('摄像头出现错误') || currentText.includes('Camera error')) {
+                        statusElement.textContent = getTextSync('statusError');
+                    }
+                }
+                
+                // 更新分辨率显示文本
+                const resolutionDisplay = document.getElementById('resolutionDisplay');
+                if (resolutionDisplay && !resolutionDisplay.classList.contains('hidden') && resolutionDisplay.textContent) {
+                    // 提取分辨率数值并重新应用本地化标签
+                    const match = resolutionDisplay.textContent.match(/(\d+)×(\d+)/);
+                    if (match && match.length >= 3) {
+                        resolutionDisplay.textContent = getTextSync('labelResolutionDisplay') + match[1] + '×' + match[2];
+                    }
+                }
+                
+                console.log('语言已切换为:', newLang);
+            }
+        });
+    });
 </script>
 </body>
 </html>

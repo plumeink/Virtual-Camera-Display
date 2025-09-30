@@ -16,6 +16,22 @@ if (platform() === 'win32') {
 }
 
 function createWindow() {
+    // 检测系统语言以设置默认窗口标题
+    const userLocale = app.getLocale();
+    const isChinese = userLocale.startsWith('zh');
+    
+    // 从语言JSON文件中读取标题文本
+    let defaultTitle = 'Virtual Camera Display'; // 默认英文标题
+    try {
+        const langFilePath = path.join(__dirname, 'lang', isChinese ? 'zh.json' : 'en.json');
+        const langData = require(langFilePath);
+        if (langData.appTitle) {
+            defaultTitle = langData.appTitle;
+        }
+    } catch (error) {
+        console.error('读取语言文件失败:', error);
+    }
+    
     // 创建无边框窗口
     const mainWindow = new BrowserWindow({
         width: 1280,
@@ -24,6 +40,7 @@ function createWindow() {
         transparent: false, // 可根据需要设置为透明
         alwaysOnTop: false, // 可根据需要置顶
         resizable: true, // 允许程序调整窗口大小
+        title: defaultTitle, // 设置默认窗口标题，从语言JSON文件读取
         icon: path.join(__dirname, 'icon.png'), // 可选：添加应用图标
         backgroundThrottling: false, // 禁用后台性能限制
         webPreferences: {

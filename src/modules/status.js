@@ -1,4 +1,4 @@
-// 状态管理模块
+// Status Management Module
 const StatusModule = {
     statusElement: null,
     permissionHelpElement: null,
@@ -6,7 +6,7 @@ const StatusModule = {
     closeHelpBtn: null,
     helpBtn: null,
     
-    // 初始化状态模块
+    // Initialize status module
     init() {
         this.statusElement = document.getElementById('status');
         this.permissionHelpElement = document.getElementById('permissionHelp');
@@ -14,13 +14,13 @@ const StatusModule = {
         this.closeHelpBtn = document.getElementById('closeHelpBtn');
         this.helpBtn = document.getElementById('helpBtn');
         
-        // 绑定事件
+        // Bind events
         this.retryBtn.addEventListener('click', () => window.appModules.camera.autoConnectCamera());
         this.closeHelpBtn.addEventListener('click', this.hidePermissionHelp.bind(this));
         this.helpBtn.addEventListener('click', this.showPermissionHelp.bind(this));
     },
     
-    // 更新状态文本
+    // Update status text
     updateStatus(message, isError = false) {
         if (this.statusElement) {
             this.statusElement.textContent = message;
@@ -32,14 +32,14 @@ const StatusModule = {
         }
     },
     
-    // 显示权限帮助弹窗
+    // Show permission help popup
     showPermissionHelp() {
         if (this.permissionHelpElement) {
             this.permissionHelpElement.classList.remove('hidden');
         }
     },
     
-    // 隐藏权限帮助弹窗
+    // Hide permission help popup
     hidePermissionHelp() {
         if (this.permissionHelpElement) {
             this.permissionHelpElement.classList.add('hidden');
@@ -47,6 +47,6 @@ const StatusModule = {
     }
 };
 
-// 导出模块
+// Export module
 window.appModules = window.appModules || {};
 window.appModules.status = StatusModule;
