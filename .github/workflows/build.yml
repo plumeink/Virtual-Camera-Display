@@ -117,5 +117,39 @@ jobs:
         } else {
           Write-Host "记录数不足5条，无需删除"
         }
+          Write-Host "清理完成！"
+
+    - name: Cleanup Old Releases
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+      shell: pwsh
+      run: |
+        # 使用PowerShell语法清理旧Release版本
+        $repo = "${{ github.repository }}"
+        Write-Host "清理仓库: $repo 的旧Release版本，保留最新5个"
         
-        Write-Host "清理完成！"
+        # 获取所有Release
+        $releases_uri = "https://api.github.com/repos/$repo/releases"
+        $all_releases = Invoke-RestMethod -Uri $releases_uri -Headers @{"Authorization" = "token $env:GITHUB_TOKEN"}
+        
+        # 打印收集到的Release总数
+        Write-Host "收集到的Release总数: $($all_releases.Length)"
+        
+        # 删除除最新5个以外的Release
+        if ($all_releases.Length -gt 5) {
+          # 获取要删除的Release（跳过前5个最新的）
+          $releases_to_delete = $all_releases[5..($all_releases.Length-1)]
+          Write-Host "要删除的Release数: $($releases_to_delete.Length)"
+          
+          # 逐个删除Release，添加延迟避免API限制
+          foreach ($release in $releases_to_delete) {
+            Write-Host "删除Release: $($release.name) (ID: $($release.id))"
+            $delete_uri = "https://api.github.com/repos/$repo/releases/$($release.id)"
+            Invoke-RestMethod -Uri $delete_uri -Headers @{"Authorization" = "token $env:GITHUB_TOKEN"} -Method Delete
+            Start-Sleep -Seconds 1 # 添加1秒延迟避免触发GitHub API速率限制
+          }
+        } else {
+          Write-Host "Release数不足5个，无需删除"
+        }
+        
+        Write-Host "Release清理完成！"

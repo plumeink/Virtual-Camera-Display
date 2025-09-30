@@ -1,6 +1,6 @@
 {
   "name": "virtual-camera-assistant",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Borderless Electron Application for Virtual Camera Assistant",
   "main": "index.js",
   "scripts": {
